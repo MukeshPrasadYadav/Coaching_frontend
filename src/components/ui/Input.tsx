@@ -1,37 +1,42 @@
-import { useState, type InputHTMLAttributes } from "react";
+import { forwardRef, useId, useState, type InputHTMLAttributes, type ReactNode, type TextareaHTMLAttributes } from "react";
+import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
+import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
+import * as SelectPrimitive from "@radix-ui/react-select";
+import * as SwitchPrimitive from "@radix-ui/react-switch";
+import { Check, ChevronDown, Eye, EyeOff, Search } from "lucide-react";
+import { cn } from "../../lib/cn";
+import { Spinner } from "./loading";
+import { Label } from "./typography";
 
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
-  label: string;
-  error?: string;
+interface FieldShellProps { id: string; label?: string; helperText?: string; error?: string; required?: boolean; children: ReactNode; }
+function FieldShell({ id, label, helperText, error, required, children }: FieldShellProps) {
+  const message = error ?? helperText;
+  return <div className="space-y-1.5">
+    {label && <Label htmlFor={id}>{label}{required && <span className="ml-1 text-danger" aria-hidden="true">*</span>}</Label>}
+    {children}
+    {message && <p id={`${id}-message`} className={cn("text-xs text-muted-foreground", error && "text-danger")} role={error ? "alert" : undefined}>{message}</p>}
+  </div>;
 }
+const controlClass = "h-10 w-full rounded-md border border-border bg-surface px-3 text-sm text-text-primary shadow-sm transition-colors placeholder:text-muted-foreground hover:border-text-secondary focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/25 disabled:cursor-not-allowed disabled:opacity-50";
+export interface BaseFieldProps { label?: string; helperText?: string; error?: string; loading?: boolean; }
+export interface TextInputProps extends InputHTMLAttributes<HTMLInputElement>, BaseFieldProps { leftIcon?: ReactNode; rightIcon?: ReactNode; }
 
-export function Input({ label, error, id, type = "text", ...props }: InputProps) {
-  const [visible, setVisible] = useState(false);
-  const isPassword = type === "password";
+export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(function TextInput({ id: suppliedId, label, helperText, error, loading, required, leftIcon, rightIcon, className, ...props }, ref) {
+  const generatedId = useId(); const id = suppliedId ?? generatedId;
+  return <FieldShell {...{ id, label, helperText, error, required }}><div className="relative">{leftIcon && <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{leftIcon}</span>}<input ref={ref} id={id} required={required} aria-invalid={!!error} aria-describedby={(error || helperText) ? `${id}-message` : undefined} className={cn(controlClass, leftIcon && "pl-9", (rightIcon || loading) && "pr-9", error && "border-danger focus:border-danger focus:ring-danger/25", className)} disabled={props.disabled || loading} {...props}/>{(loading || rightIcon) && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">{loading ? <Spinner size="sm" /> : rightIcon}</span>}</div></FieldShell>;
+});
+export const PasswordInput = forwardRef<HTMLInputElement, TextInputProps>(function PasswordInput(props, ref) { const [visible, setVisible] = useState(false); return <TextInput ref={ref} {...props} type={visible ? "text" : "password"} rightIcon={<button type="button" className="rounded-sm" onClick={() => setVisible(v => !v)} aria-label={visible ? "Hide password" : "Show password"}>{visible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</button>} />; });
+export const SearchInput = forwardRef<HTMLInputElement, TextInputProps>(function SearchInput(props, ref) { return <TextInput ref={ref} type="search" leftIcon={<Search className="size-4" />} {...props} />; });
+export const DatePicker = forwardRef<HTMLInputElement, TextInputProps>(function DatePicker(props, ref) { return <TextInput ref={ref} type="date" {...props} />; });
 
-  return (
-    <div className="field">
-      <label htmlFor={id}>{label}</label>
-      <div className="input-wrap">
-        <input
-          id={id}
-          type={isPassword && visible ? "text" : type}
-          aria-invalid={Boolean(error)}
-          aria-describedby={error ? `${id}-error` : undefined}
-          {...props}
-        />
-        {isPassword && (
-          <button
-            type="button"
-            className="password-toggle"
-            onClick={() => setVisible((value) => !value)}
-            aria-label={visible ? "Hide password" : "Show password"}
-          >
-            {visible ? "Hide" : "Show"}
-          </button>
-        )}
-      </div>
-      {error && <p id={`${id}-error`} className="field-error">{error}</p>}
-    </div>
-  );
-}
+export const TextArea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement> & BaseFieldProps>(function TextArea({ id: suppliedId, label, helperText, error, loading, required, className, ...props }, ref) { const generatedId = useId(); const id = suppliedId ?? generatedId; return <FieldShell {...{ id, label, helperText, error, required }}><textarea ref={ref} id={id} required={required} aria-invalid={!!error} aria-describedby={(error || helperText) ? `${id}-message` : undefined} disabled={props.disabled || loading} className={cn(controlClass, "min-h-24 resize-y py-2", error && "border-danger", className)} {...props}/></FieldShell>; });
+
+export interface SelectOption { label: string; value: string; disabled?: boolean; }
+export function Select({ id: suppliedId, label, helperText, error, required, disabled, loading, placeholder = "Select an option", options, value, defaultValue, onValueChange }: BaseFieldProps & { id?: string; required?: boolean; disabled?: boolean; placeholder?: string; options: SelectOption[]; value?: string; defaultValue?: string; onValueChange?: (value: string) => void }) { const generatedId = useId(); const id = suppliedId ?? generatedId; return <FieldShell {...{ id, label, helperText, error, required }}><SelectPrimitive.Root value={value} defaultValue={defaultValue} onValueChange={onValueChange} disabled={disabled || loading}><SelectPrimitive.Trigger id={id} aria-invalid={!!error} className={cn(controlClass, "flex items-center justify-between", error && "border-danger")}><SelectPrimitive.Value placeholder={placeholder}/>{loading ? <Spinner size="sm"/> : <SelectPrimitive.Icon><ChevronDown className="size-4"/></SelectPrimitive.Icon>}</SelectPrimitive.Trigger><SelectPrimitive.Portal><SelectPrimitive.Content position="popper" className="z-50 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-md border bg-surface p-1 shadow-lg"><SelectPrimitive.Viewport>{options.map(option => <SelectPrimitive.Item key={option.value} value={option.value} disabled={option.disabled} className="relative flex cursor-default select-none items-center rounded px-8 py-2 text-sm outline-none data-[highlighted]:bg-muted data-[disabled]:opacity-50"><SelectPrimitive.ItemIndicator className="absolute left-2"><Check className="size-4"/></SelectPrimitive.ItemIndicator><SelectPrimitive.ItemText>{option.label}</SelectPrimitive.ItemText></SelectPrimitive.Item>)}</SelectPrimitive.Viewport></SelectPrimitive.Content></SelectPrimitive.Portal></SelectPrimitive.Root></FieldShell>; }
+
+export function Checkbox({ id: suppliedId, label, helperText, error, required, disabled, loading, checked, defaultChecked, onCheckedChange }: BaseFieldProps & { id?: string; required?: boolean; disabled?: boolean; checked?: boolean; defaultChecked?: boolean; onCheckedChange?: (checked: boolean) => void }) { const generatedId = useId(); const id = suppliedId ?? generatedId; return <FieldShell id={id} helperText={helperText} error={error} required={required}><div className="flex items-center gap-2"><CheckboxPrimitive.Root id={id} checked={checked} defaultChecked={defaultChecked} onCheckedChange={v => onCheckedChange?.(v === true)} disabled={disabled || loading} className="grid size-4 place-items-center rounded border border-border bg-surface text-primary data-[state=checked]:border-primary disabled:opacity-50"><CheckboxPrimitive.Indicator><Check className="size-3.5"/></CheckboxPrimitive.Indicator></CheckboxPrimitive.Root>{label && <Label htmlFor={id}>{label}{required && <span className="ml-1 text-danger">*</span>}</Label>}{loading && <Spinner size="sm"/>}</div></FieldShell>; }
+export function Switch({ id: suppliedId, label, helperText, error, disabled, loading, checked, defaultChecked, onCheckedChange }: BaseFieldProps & { id?: string; disabled?: boolean; checked?: boolean; defaultChecked?: boolean; onCheckedChange?: (checked: boolean) => void }) { const generatedId = useId(); const id = suppliedId ?? generatedId; return <FieldShell id={id} helperText={helperText} error={error}><div className="flex items-center gap-3"><SwitchPrimitive.Root id={id} checked={checked} defaultChecked={defaultChecked} onCheckedChange={onCheckedChange} disabled={disabled || loading} className="h-6 w-11 rounded-full bg-muted transition-colors data-[state=checked]:bg-primary disabled:opacity-50"><SwitchPrimitive.Thumb className="block size-5 translate-x-0.5 rounded-full bg-white shadow transition-transform data-[state=checked]:translate-x-5"/></SwitchPrimitive.Root>{label && <Label htmlFor={id}>{label}</Label>}{loading && <Spinner size="sm"/>}</div></FieldShell>; }
+export function Radio({ id: suppliedId, label, helperText, error, required, disabled, options, value, defaultValue, onValueChange }: BaseFieldProps & { id?: string; required?: boolean; disabled?: boolean; options: SelectOption[]; value?: string; defaultValue?: string; onValueChange?: (value: string) => void }) { const generatedId = useId(); const id = suppliedId ?? generatedId; return <FieldShell {...{ id, label, helperText, error, required }}><RadioGroupPrimitive.Root value={value} defaultValue={defaultValue} onValueChange={onValueChange} disabled={disabled} className="space-y-2">{options.map(option => <div key={option.value} className="flex items-center gap-2"><RadioGroupPrimitive.Item id={`${id}-${option.value}`} value={option.value} disabled={option.disabled} className="grid size-4 place-items-center rounded-full border border-border text-primary data-[state=checked]:border-primary disabled:opacity-50"><RadioGroupPrimitive.Indicator className="size-2 rounded-full bg-current"/></RadioGroupPrimitive.Item><Label htmlFor={`${id}-${option.value}`}>{option.label}</Label></div>)}</RadioGroupPrimitive.Root></FieldShell>; }
+
+/** @deprecated Use TextInput or PasswordInput. */
+export const Input = TextInput;

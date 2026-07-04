@@ -1,34 +1,12 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
-
-type ToastKind = "success" | "error";
-interface ToastItem { id: number; message: string; kind: ToastKind }
-interface ToastContextValue { showToast: (message: string, kind: ToastKind) => void }
-
-const ToastContext = createContext<ToastContextValue | null>(null);
-
-export function ToastProvider({ children }: { children: ReactNode }) {
-  const [toasts, setToasts] = useState<ToastItem[]>([]);
-  const showToast = useCallback((message: string, kind: ToastKind) => {
-    const id = Date.now() + Math.random();
-    setToasts((items) => [...items, { id, message, kind }]);
-    window.setTimeout(() => setToasts((items) => items.filter((item) => item.id !== id)), 4_000);
-  }, []);
-  const value = useMemo(() => ({ showToast }), [showToast]);
-
-  return (
-    <ToastContext.Provider value={value}>
-      {children}
-      <div className="toast-region" aria-live="polite" aria-atomic="true">
-        {toasts.map((toast) => <div key={toast.id} className={`toast ${toast.kind}`}>{toast.message}</div>)}
-      </div>
-    </ToastContext.Provider>
-  );
-}
-
-// The hook intentionally lives with its provider to keep this small UI primitive cohesive.
-// eslint-disable-next-line react-refresh/only-export-components
-export function useToast(): ToastContextValue {
-  const context = useContext(ToastContext);
-  if (!context) throw new Error("useToast must be used within ToastProvider");
-  return context;
+import { useEffect, useState } from "react";
+import { AlertCircle, CheckCircle2, Info, TriangleAlert, X } from "lucide-react";
+import { subscribeToToasts, type ToastPayload } from "../../lib/toast";
+import { cn } from "../../lib/cn";
+import { Button } from "./Button";
+const icons = { success: CheckCircle2, error: AlertCircle, warning: TriangleAlert, info: Info };
+export function ToastProvider({ children }: { children: React.ReactNode }) {
+  const [toasts, setToasts] = useState<ToastPayload[]>([]);
+  useEffect(() => subscribeToToasts(toast => { setToasts(items => [...items, toast]); window.setTimeout(() => setToasts(items => items.filter(item => item.id !== toast.id)), 4000); }), []);
+  const dismiss = (id: number) => setToasts(items => items.filter(item => item.id !== id));
+  return <>{children}<div className="fixed right-4 top-4 z-[70] grid w-[min(24rem,calc(100vw-2rem))] gap-2" aria-live="polite" aria-atomic="true">{toasts.map(toast => { const Icon = icons[toast.kind]; return <div key={toast.id} className={cn("flex items-start gap-3 rounded-lg border bg-surface p-4 shadow-lg", { success: "border-success/40", error: "border-danger/40", warning: "border-warning/40", info: "border-info/40" }[toast.kind])}><Icon className={cn("mt-0.5 size-5 shrink-0", { success: "text-success", error: "text-danger", warning: "text-warning", info: "text-info" }[toast.kind])}/><p className="flex-1 text-sm">{toast.message}</p><Button variant="ghost" size="icon" className="-m-2 size-8" onClick={() => dismiss(toast.id)} aria-label="Dismiss notification"><X className="size-4"/></Button></div>; })}</div></>;
 }

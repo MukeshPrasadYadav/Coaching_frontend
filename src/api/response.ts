@@ -1,3 +1,4 @@
+// src/api/response.ts
 import type { ApiError, ApiResponse } from "./types";
 
 export class ApiException extends Error {

@@ -1,3 +1,4 @@
+// src/app/types/permissions.ts
 export const Permission = {
   ADD_STUDENT : "ADD_STUDENT",
   UPDATE_STUDENT : "UPDATE_STUDENT",

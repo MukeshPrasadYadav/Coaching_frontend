@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { useUserStore } from "./app/userStore";
 import { ToastProvider } from "./components/ui/Toast";
+import { FullPageLoader } from "./components/ui/loading";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
@@ -26,7 +27,7 @@ function AppRoutes() {
     return () => { active = false; };
   }, [setUser]);
 
-  if (checkingSession) return <div className="session-loader"><span className="spinner" /><span>Restoring your session…</span></div>;
+  if (checkingSession) return <FullPageLoader label="Restoring your session…" />;
 
   return (
     <Routes>

@@ -1,3 +1,4 @@
+// src/app/types/roles.ts
 export const Role = {
     ADMIN :"ADMIN",
     STUDENT :"STUDENT",

@@ -1,26 +1,3 @@
 import type { ReactNode } from "react";
-
-export function AuthLayout({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {
-  return (
-    <main className="auth-page">
-      <section className="auth-brand" aria-label="Coaching Management System">
-        <div className="brand-mark">CM</div>
-        <div>
-          <p className="eyebrow">Coaching Management</p>
-          <h1>Teach with clarity.<br />Grow with purpose.</h1>
-          <p className="brand-copy">One focused workspace for your institute, educators, and students.</p>
-        </div>
-        <p className="brand-foot">Secure access · Simple management</p>
-      </section>
-      <section className="auth-panel">
-        <div className="auth-card">
-          <div className="mobile-brand"><span className="brand-mark small">CM</span> Coaching Management</div>
-          <p className="eyebrow">Account access</p>
-          <h2>{title}</h2>
-          <p className="subtitle">{subtitle}</p>
-          {children}
-        </div>
-      </section>
-    </main>
-  );
-}
+import { Heading, SubHeading, Text } from "../ui/typography";
+export function AuthLayout({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) { return <main className="grid min-h-screen bg-background lg:grid-cols-[.9fr_1.1fr]"><section className="relative hidden overflow-hidden border-r bg-surface p-12 lg:flex lg:flex-col lg:justify-between xl:p-20" aria-label="Coaching Management System"><div className="grid size-12 place-items-center rounded-xl bg-primary font-black text-primary-foreground">CM</div><div><Text className="mb-4 font-semibold uppercase tracking-[.16em] text-primary">Coaching Management</Text><Heading className="max-w-xl text-5xl xl:text-7xl">Teach with clarity.<br/>Grow with purpose.</Heading><Text variant="muted" className="mt-7 max-w-lg text-base">One focused workspace for your institute, educators, and students.</Text></div><Text variant="small" className="text-muted-foreground">Secure access · Simple management</Text></section><section className="grid place-items-center px-5 py-10"><div className="w-full max-w-md"><div className="mb-10 flex items-center gap-3 font-semibold lg:hidden"><span className="grid size-9 place-items-center rounded-lg bg-primary text-xs font-black text-primary-foreground">CM</span>Coaching Management</div><Text className="mb-3 font-semibold uppercase tracking-[.16em] text-primary">Account access</Text><SubHeading className="text-3xl">{title}</SubHeading><Text variant="muted" className="mb-8 mt-2">{subtitle}</Text>{children}</div></section></main>; }

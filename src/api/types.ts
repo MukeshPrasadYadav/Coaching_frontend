@@ -1,3 +1,4 @@
+// src/api/types.ts
 export interface ApiError {
   message: string;
   status: string;

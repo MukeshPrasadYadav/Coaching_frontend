@@ -1,3 +1,4 @@
+// src/app/types/user.ts
 import type { Permission } from "./permissions";
 import type { Role } from "./roles";
 
